@@ -44,8 +44,18 @@ it('장바구니에 포함된 아이템들의 이름, 수량, 합계가 제대�
   const [firstItem, secondItem] = dataRows;
 
   // Assert: 첫 번째 아이템의 이름, 수량, 합계 금액을 확인합니다.
+  expect(
+    within(firstItem).getByText('Handmade Cotton Fish')
+  ).toBeInTheDocument();
+  expect(within(firstItem).getByText('3')).toBeInTheDocument();
+  expect(within(firstItem).getByText('2427')).toBeInTheDocument();
 
   // Assert: 두 번째 아이템의 이름, 수량, 합계 금액을 확인합니다.
+  expect(
+    within(secondItem).getByText('Awesome Concrete Shirt')
+  ).toBeInTheDocument();
+  expect(within(secondItem).getByText('4')).toBeInTheDocument();
+  expect(within(secondItem).getByText('1768')).toBeInTheDocument();
 });
 
 it('특정 아이템의 수량이 변경되었을 때 값이 재계산되어 올바르게 업데이트 된다', async () => {
@@ -55,8 +65,12 @@ it('특정 아이템의 수량이 변경되었을 때 값이 재계산되어 올
   const [firstItem] = dataRows.slice(1); // 첫 번째 데이터 행 선택
 
   // Act: 첫 번째 아이템의 수량을 변경합니다.
+  const quantityInput = within(firstItem).getByRole('spinbutton');
+  await user.clear(quantityInput);
+  await user.type(quantityInput, '5');
 
   // Assert: 수량이 변경된 후 재계산된 금액이 올바르게 표시되는지 확인합니다.
+  expect(within(firstItem).getByText('4045')).toBeInTheDocument();
 });
 
 // 최대 수량을 초과할 경우 경고 메시지 확인
@@ -70,8 +84,12 @@ it('특정 아이템의 수량이 1000개로 변경될 경우 "최대 999개 까
   const [firstItem] = dataRows.slice(1);
 
   // Act: 첫 번째 아이템의 수량을 1000으로 변경합니다.
+  const quantityInput = within(firstItem).getByRole('spinbutton');
+  await user.clear(quantityInput);
+  await user.type(quantityInput, '1000');
 
   // Assert: 최대 수량 초과 경고 메시지가 올바르게 표시되는지 확인합니다.
+  expect(alertSpy).toHaveBeenCalledWith('최대 999개까지 가능합니다!');
 });
 
 // 아이템 삭제 버튼 클릭 후 UI에서 해당 아이템이 사라지는지 확인
@@ -82,8 +100,20 @@ it('특정 아이템의 삭제 버튼을 클릭할 경우 해당 아이템이 �
   const [, secondItem] = dataRows.slice(1); // 두 번째 데이터 행 선택
 
   // Assert: 삭제 전 아이템이 화면에 있는지 확인합니다.
+  expect(
+    within(secondItem).getByText('Awesome Concrete Shirt')
+  ).toBeInTheDocument();
 
   // Act: 삭제 버튼을 클릭합니다.
+  const deleteButton = within(secondItem).getByRole('button', {
+    name: /delete/i,
+  });
+  await user.click(deleteButton);
 
   // Assert: 삭제 후 해당 아이템이 화면에서 사라졌는지 확인합니다.
+  await waitFor(() => {
+    expect(
+      within(secondItem).queryByText('Awesome Concrete Shirt')
+    ).not.toBeInTheDocument();
+  });
 });
